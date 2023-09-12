@@ -17,6 +17,62 @@ sys.dont_write_bytecode = True
 import at_gen_gui as atgengui
 importlib.reload(atgengui)
 
+#for debug print
+DebugPrint = True
+
+def Cleanup(TOLOWERCASE, TOEPOLY, COLLAPSESTACK):
+
+    #First we check names and reneme if necessary
+    name_check_result = []
+    name_check_result = nameChecker(TOLOWERCASE)
+
+    if DebugPrint == True:
+        print("-- nameChecker --")
+        print("NewName:", name_check_result[0])
+        print("Message:", name_check_result[1])
+        print("Renamed:", name_check_result[2])
+        
+    
+    # Second we check geometry and stack
+    check_result = []
+    check_result = checkSelection(TOEPOLY, COLLAPSESTACK)
+
+    if DebugPrint == True:
+        print("-- checkSelection --")
+        print ("sel_objects:", check_result[0])
+        print ("sel_editable_poly_objects:", check_result[1])
+        print ("sel_bones:", check_result[2])
+        print ("sel_editable_poly_nodes:", check_result[3])
+        print ("messages:", check_result[4])
+
+    sel_objects = check_result[0]
+    sel_editable_poly_objects = check_result[1]
+    sel_bones = check_result[2]
+    sel_editable_poly_nodes = check_result[3]
+    messages = check_result[4]
+
+    # stat selection
+    SelectedObjects = len(sel_objects)
+    SelectedEditablePolyObj = len(sel_editable_poly_objects)
+    SelectedBones = len(sel_bones)
+
+    # Run Prepare mesh
+    check_data = []
+    if len(sel_editable_poly_objects) > 0:
+        check_data = prepareMesh(sel_editable_poly_objects)
+    else:
+        check_data.append("null")
+        check_data.append(messages)
+        
+    if DebugPrint == True:
+        print("-- prepareMesh --")
+        print("0", check_data[0])
+        print("1", check_data[1])
+
+    
+    return check_data
+
+
 def checkSelection(ToPoly, CollapseStack):
     
     #arrays for objects
@@ -72,12 +128,9 @@ def checkSelection(ToPoly, CollapseStack):
     else:
         messages.append("Please select something!")
 
-
-    messages.append("Complete!")
-
     return all_sel_obj, editable_poly_obj, bones_obj, editable_poly_nodes, messages
 
-
+# Function for check names
 def nameChecker(ToLowercase):
     
     NewName = ""
@@ -336,8 +389,5 @@ def prepareMesh(sel_editable_poly_objects):
     #8    
     if prep_mesh_conclusion_data[8] == True:
         messages.append("9. Materials was processed.")
-    
-
-    #print(prep_mesh_conclusion_data)
 
     return prep_mesh_conclusion_data, messages

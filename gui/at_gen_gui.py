@@ -183,7 +183,7 @@ class AT_GEN_TAB (QWidget):
         
         # Signals
         # Buttons
-        self.btnCleanup.clicked.connect(self.Cleanup)
+        self.btnCleanup.clicked.connect(self.CleanupRun)
         self.btnGetStat.clicked.connect(self.Statistics)
         self.btnShowDim.clicked.connect(self.Dimension)
         self.btnZeroSGSel.clicked.connect(self.btnZeroSGSelClicked)
@@ -210,15 +210,15 @@ class AT_GEN_TAB (QWidget):
         self.gboxCleanupOptions.setEnabled(True)
 
     # Cleanup
-    def Cleanup(self):
-      
+    def CleanupRun(self):
+      print("run!")
       #TOLOWERCASE = cbLowercase.isChecked()
       #TOEPOLY = cbToEdPoly.isChecked()
       #COLLAPSESTACK = cbCollapseStack.isChecked()
       #CLEANUPTYPE = cboxCleanupType.currentIndex()
 
-      if CLEANUPTYPE == 0:
-        self.geometryCleanup(TOLOWERCASE, TOEPOLY, COLLAPSESTACK)
+      #if CLEANUPTYPE == 0:
+        #self.geometryCleanup(TOLOWERCASE, TOEPOLY, COLLAPSESTACK)
 
     
     def geometryCleanup(self, TOLOWERCASE, TOEPOLY, COLLAPSESTACK):
@@ -265,13 +265,15 @@ class AT_GEN_TAB (QWidget):
 
         prep_messages = check_data[1]
 
+        self.tbLog.text = ""
+
         for i in range(len(prep_messages)):
           self.tbLog.append(prep_messages[i])
  
     
     
     def Statistics(self):
-     print ("hehre")
+
      self.tbLog.setMarkdown("Statistics")
      
     def Dimension(self):

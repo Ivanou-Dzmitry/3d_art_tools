@@ -21,6 +21,8 @@ maxWidth = (at.scaledWidth*0.97) #set MaxW of window
 font = QFont()
 font.setPointSize(11)
 
+DebugPrint = True
+
 class AT_GEN_TAB (QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)
@@ -156,7 +158,7 @@ class AT_GEN_TAB (QWidget):
         self.btnZeroSGSel.setEnabled(False)
 
         # SIGNALS GEN
-        self.btnCleanup.clicked.connect(atgenfunc.Cleanup)
+        self.btnCleanup.clicked.connect(self.CleanupRun)
         #self.btnGetStat.clicked.connect(self.btnGetStatClicked)
         #self.btnShowDim.clicked.connect(self.btnShowDimClicked)
         #self.btnZeroSGSel.clicked.connect(self.btnZeroSGSelClicked)
@@ -167,6 +169,29 @@ class AT_GEN_TAB (QWidget):
         
         # Combo boxes
         #self.cboxCleanupType.activated.connect(self.cbCleanupTypeActivated)
+    
+    def CleanupRun(self):
+      
+      TOLOWERCASE = self.cbLowercase.isChecked()
+      TOEPOLY = self.cbToEdPoly.isChecked()
+      COLLAPSESTACK = self.cbCollapseStack.isChecked()
+      CLEANUPTYPE = self.cboxCleanupType.currentIndex()
+
+      if CLEANUPTYPE == 0:
+        cleanup_result = []
+        cleanup_result = atgenfunc.Cleanup(TOLOWERCASE, TOEPOLY, COLLAPSESTACK)
+
+        prep_messages = []
+        prep_messages = cleanup_result[1]
+
+        self.tbLog.setText("")
+
+        for i in range(len(prep_messages)):
+          self.tbLog.append(prep_messages[i])
+
+
+        #self.tbLog.setText(CleanupResult[4][0])
+
 
 class AT_TEX_TAB (QWidget):
     def __init__(self, parent=None):

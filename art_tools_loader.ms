@@ -7,9 +7,9 @@
 
 macroScript ArtTools3D
  category:"3D Art Tools"
- tooltip:"3D Art Tools 2023"
+ tooltip:"3D Art Tools"
  buttonText:"3D Art Tools"
- Icon: #("art_tools_32", 1)
+ Icon: #("arttools", 1)
 
 (
 
