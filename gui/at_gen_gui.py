@@ -27,6 +27,8 @@ RootDir = ".."
 if RootDir not in sys.path:
   sys.path.append( RootDir )
 
+sys.dont_write_bytecode = True
+
 #import pt_config_loader as cfgl
 #importlib.reload(cfgl)
 
@@ -60,8 +62,8 @@ class AT_GEN_TAB (QWidget):
 
         #group box for cleanup options
         self.gboxCleanupOptions = QGroupBox("Cleanup Options")
-        self.ClenupOptionsLayout = atgui.rowLayoutVert(4, self)
-        self.gboxCleanupOptions.setLayout(self.ClenupOptionsLayout)
+        self.CleanupOptionsLayout = atgui.rowLayoutVert(4, self)
+        self.gboxCleanupOptions.setLayout(self.CleanupOptionsLayout)
 
         # clenaup button
         self.btnCleanup = atgui.atButton("Cleanup", "Cleanup selected", self)
@@ -155,11 +157,11 @@ class AT_GEN_TAB (QWidget):
         # Add group box
         self.Row02.addWidget(self.gboxCleanupOptions)
         # Add options
-        self.ClenupOptionsLayout.addWidget(self.cbToEdPoly)
-        self.ClenupOptionsLayout.addWidget(self.cbCollapseStack)
-        self.ClenupOptionsLayout.addWidget(self.cbLowercase)
-        self.ClenupOptionsLayout.addWidget(self.cbConvertMat)
-        self.ClenupOptionsLayout.addWidget(self.cboxMaterials)
+        self.CleanupOptionsLayout.addWidget(self.cbToEdPoly)
+        self.CleanupOptionsLayout.addWidget(self.cbCollapseStack)
+        self.CleanupOptionsLayout.addWidget(self.cbLowercase)
+        self.CleanupOptionsLayout.addWidget(self.cbConvertMat)
+        self.CleanupOptionsLayout.addWidget(self.cboxMaterials)
 
         # Add prepare buttons Row3
         self.Row03.addWidget(self.btnGetStat)
@@ -181,9 +183,9 @@ class AT_GEN_TAB (QWidget):
         
         # Signals
         # Buttons
-        self.btnCleanup.clicked.connect(self.btnCleanupClicked)
-        self.btnGetStat.clicked.connect(self.btnGetStatClicked)
-        self.btnShowDim.clicked.connect(self.btnShowDimClicked)
+        self.btnCleanup.clicked.connect(self.Cleanup)
+        self.btnGetStat.clicked.connect(self.Statistics)
+        self.btnShowDim.clicked.connect(self.Dimension)
         self.btnZeroSGSel.clicked.connect(self.btnZeroSGSelClicked)
         self.btnMergeSGSel.clicked.connect(self.btnMergeSGSelClicked)
         
@@ -207,18 +209,17 @@ class AT_GEN_TAB (QWidget):
       else:
         self.gboxCleanupOptions.setEnabled(True)
 
-    def btnCleanupClicked(self):
-
-      TOLOWERCASE = self.cbLowercase.isChecked()
-      TOEPOLY = self.cbToEdPoly.isChecked()
-      COLLAPSESTACK = self.cbCollapseStack.isChecked()
-
-      CLEANUPTYPE = self.cboxCleanupType.currentIndex()
+    # Cleanup
+    def Cleanup(self):
+      
+      #TOLOWERCASE = cbLowercase.isChecked()
+      #TOEPOLY = cbToEdPoly.isChecked()
+      #COLLAPSESTACK = cbCollapseStack.isChecked()
+      #CLEANUPTYPE = cboxCleanupType.currentIndex()
 
       if CLEANUPTYPE == 0:
         self.geometryCleanup(TOLOWERCASE, TOEPOLY, COLLAPSESTACK)
 
-      
     
     def geometryCleanup(self, TOLOWERCASE, TOEPOLY, COLLAPSESTACK):
 
@@ -269,10 +270,11 @@ class AT_GEN_TAB (QWidget):
  
     
     
-    def btnGetStatClicked(self):
+    def Statistics(self):
+     print ("hehre")
      self.tbLog.setMarkdown("Statistics")
      
-    def btnShowDimClicked(self):
+    def Dimension(self):
      self.tbLog.setMarkdown("Dimension")
 
     def btnZeroSGSelClicked(self):

@@ -12,20 +12,11 @@ import string
 import importlib
 from pymxs import runtime as rt
 
+sys.dont_write_bytecode = True
+
 import at_gen_gui as atgengui
 importlib.reload(atgengui)
 
-def Cleanup(self):
-   
-    TOLOWERCASE = atgengui.cbLowercase.isChecked()
-    TOEPOLY = self.cbToEdPoly.isChecked()
-    COLLAPSESTACK = self.cbCollapseStack.isChecked()
-
-    CLEANUPTYPE = self.cboxCleanupType.currentIndex()
-
-    if CLEANUPTYPE == 0:
-        self.geometryCleanup(TOLOWERCASE, TOEPOLY, COLLAPSESTACK)
-    
 def checkSelection(ToPoly, CollapseStack):
     
     #arrays for objects

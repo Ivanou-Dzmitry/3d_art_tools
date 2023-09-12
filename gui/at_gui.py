@@ -1,17 +1,18 @@
 #******************************************************************************************************
 # Created: Dzmitry Ivanou        
 # Last Updated: 2023
-# Version: 2021.0.1
 #
 #******************************************************************************************************
 # MODIFY THIS AT YOUR OWN RISK
 
 import os
+import gc
 import sys
 import importlib
 from PySide2 import QtWidgets, QtCore, QtGui
 from pymxs import runtime as rt
 
+sys.dont_write_bytecode = True
 
 import at_gen_gui as atgengui
 importlib.reload (atgengui)
@@ -39,7 +40,7 @@ class ATWINDOW (QtWidgets.QDockWidget):
         
         super(ATWINDOW, self).__init__(parent)
         self.setWindowFlags(QtCore.Qt.Tool)
-        self.setWindowTitle('3D Art Tools 2023')
+        self.setWindowTitle('3D Art Tools 0.1')
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         
         #main layout
@@ -88,6 +89,8 @@ class ATWINDOW (QtWidgets.QDockWidget):
         #unreg viewport functions
         #rt.unregisterRedrawViewsCallback(genf.showDimensionInViewport)
         #rt.unregisterRedrawViewsCallback(genf.showDimensionInViewport)
+
+        gc.collect()
 
         print ('\n', "PolygonTools was closed.")
 

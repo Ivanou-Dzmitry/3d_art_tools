@@ -36,6 +36,8 @@ guiPath = tempGUIPath.replace ("\\", "/")
 tempFuncPath = (currentDir + "\\functions")
 funcPath = tempFuncPath.replace ("\\", "/")
 
+sys.dont_write_bytecode = True
+
 #add path
 if currentDir not in sys.path:
   sys.path.append( currentDir )
