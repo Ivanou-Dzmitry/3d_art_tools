@@ -7,6 +7,7 @@
 
 import sys
 import os
+import re
 import random
 import string
 import importlib
@@ -14,13 +15,13 @@ from pymxs import runtime as rt
 
 sys.dont_write_bytecode = True
 
-import at_gen_gui as atgengui
-importlib.reload(atgengui)
-
 #for debug print
 DebugPrint = True
 
 def Cleanup(TOLOWERCASE, TOEPOLY, COLLAPSESTACK):
+
+    cleanup_message = []
+    cleanup_message.append("CLEANUP SUMMARY")
 
     #First we check names and reneme if necessary
     name_check_result = []
@@ -28,11 +29,15 @@ def Cleanup(TOLOWERCASE, TOEPOLY, COLLAPSESTACK):
 
     if DebugPrint == True:
         print("-- nameChecker --")
-        print("NewName:", name_check_result[0])
-        print("Message:", name_check_result[1])
-        print("Renamed:", name_check_result[2])
+        print("Was Renamed:", name_check_result[1])
+        print("Renamed Objects:", name_check_result[0])
         
-    
+        
+    if name_check_result[1] == True:
+        cleanup_message.append("Renamed objects:")
+        for i in range(len(name_check_result[0])):
+            cleanup_message.append(name_check_result[0][i])
+   
     # Second we check geometry and stack
     check_result = []
     check_result = checkSelection(TOEPOLY, COLLAPSESTACK)
@@ -43,13 +48,18 @@ def Cleanup(TOLOWERCASE, TOEPOLY, COLLAPSESTACK):
         print ("sel_editable_poly_objects:", check_result[1])
         print ("sel_bones:", check_result[2])
         print ("sel_editable_poly_nodes:", check_result[3])
-        print ("messages:", check_result[4])
+        print ("converted_objects:", check_result[4])
 
     sel_objects = check_result[0]
     sel_editable_poly_objects = check_result[1]
     sel_bones = check_result[2]
     sel_editable_poly_nodes = check_result[3]
-    messages = check_result[4]
+
+    if len(check_result[4]) > 0:
+        cleanup_message.append("\nObjects Converted To Poly:")
+        for i in range(len(check_result[4])):
+            cleanup_message.append(check_result[4][i])
+
 
     # stat selection
     SelectedObjects = len(sel_objects)
@@ -60,17 +70,30 @@ def Cleanup(TOLOWERCASE, TOEPOLY, COLLAPSESTACK):
     check_data = []
     if len(sel_editable_poly_objects) > 0:
         check_data = prepareMesh(sel_editable_poly_objects)
+
+        cleanup_message.append("\nProceeded Objects List:")
+        for i in range(len(sel_editable_poly_objects)):
+            cleanup_message.append(sel_editable_poly_objects[i])
+
+        cleanup_message.append("\nOperations Performed:")
+        for i in range(len(check_data[1])):
+            cleanup_message.append(check_data[1][i])
     else:
+        cleanup_message.append("\nNo objects of type editable poly were selected. Geometry cleanup works only with editable poly objects.")
         check_data.append("null")
-        check_data.append(messages)
+        check_data.append("null")
         
     if DebugPrint == True:
         print("-- prepareMesh --")
-        print("0", check_data[0])
-        print("1", check_data[1])
+        print("Data for conclusion:", check_data[0])
+        print("Cleanup Items:", check_data[1])
 
+    if DebugPrint == True:
+        print("-- Cleanup Message --")
+        for i in range(len(cleanup_message)):
+            print(cleanup_message[i])
     
-    return check_data
+    return check_data, cleanup_message
 
 
 def checkSelection(ToPoly, CollapseStack):
@@ -82,7 +105,8 @@ def checkSelection(ToPoly, CollapseStack):
 
     editable_poly_nodes = []
     other_nodes = []
-    messages = []
+
+    converted_objects = []
 
     #selected obj
     SelObjCount = rt.selection.count
@@ -104,8 +128,9 @@ def checkSelection(ToPoly, CollapseStack):
                 rt.maxops.collapsenode((c), True)
 
             #Ic Convert to Poly is true IMPORTANT!
-            if ToPoly==True:
+            if ((ToPoly==True) and (str(rt.classOf(c)) != "Editable_Poly")):
                 rt.convertToPoly (c)
+                converted_objects.append(ObjectName)
 
             #get class names
             ObjectType = str(rt.classOf(c))
@@ -124,11 +149,8 @@ def checkSelection(ToPoly, CollapseStack):
             if len(other_nodes) > 0:
                 for i in range(len(other_nodes)):
                     rt.deselect (other_nodes[i])   
-                                  
-    else:
-        messages.append("Please select something!")
 
-    return all_sel_obj, editable_poly_obj, bones_obj, editable_poly_nodes, messages
+    return all_sel_obj, editable_poly_obj, bones_obj, editable_poly_nodes, converted_objects
 
 # Function for check names
 def nameChecker(ToLowercase):
@@ -136,6 +158,10 @@ def nameChecker(ToLowercase):
     NewName = ""
     Message = ""
     Renamed = False
+    renamed_objects = []
+
+    # this symbols will be removed from name
+    bad_characters = '!@#$%^&*()+?=,\\:;"<>/'
 
     SelectedNodes = rt.selection
         
@@ -148,15 +174,20 @@ def nameChecker(ToLowercase):
         RandomNumber = str(random.randrange(1, 1000))
  
         if len(OldName) == 0:
-            #add random rename
-            NewName = "renamed_object_" + RandomLetter + RandomNumber
+            #Fix empty name - add random name
+            NewName = "renamed_obj_" + RandomLetter + RandomNumber
             c.name = NewName
-            Message = ("Object was renamed during processing because the object didn't have a name. New name: " + NewName)
-            Renamed = True
-        elif "\'" in OldName:
-            NewName = OldName.replace("\'", "")
-            c.name = NewName
-            Message = ("Object was renamed during processing because the object had invalid characters in the name. New name: " + NewName)
+            Message = ("The object had no name. New name is " + NewName)
+            renamed_objects.append(Message)
+            Renamed = True  
+        elif any(c in bad_characters for c in OldName):
+            #Fix symbols - remove it
+            NewName = re.sub('\W+','', OldName)
+            if len(NewName) == 0:
+                NewName = "renamed_obj_" + RandomLetter + RandomNumber
+            c.name = NewName 
+            Message = ("Object had invalid characters in the name. Fixed name is " + NewName)
+            renamed_objects.append(Message)
             Renamed = True
         elif ToLowercase == True:
             NewName = OldName.lower()
@@ -166,7 +197,7 @@ def nameChecker(ToLowercase):
             NewName = OldName
             Renamed = False
             
-    return NewName, Message, Renamed
+    return renamed_objects, Renamed
 
 def sceneName():
 

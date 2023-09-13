@@ -14,9 +14,6 @@ from pymxs import runtime as rt
 
 sys.dont_write_bytecode = True
 
-import at_gen_gui as atgengui
-importlib.reload (atgengui)
-
 import at_tabs_gui as attabsgui
 importlib.reload (attabsgui)
 

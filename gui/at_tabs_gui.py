@@ -181,16 +181,14 @@ class AT_GEN_TAB (QWidget):
         cleanup_result = []
         cleanup_result = atgenfunc.Cleanup(TOLOWERCASE, TOEPOLY, COLLAPSESTACK)
 
-        prep_messages = []
-        prep_messages = cleanup_result[1]
+        cleanup_message = []
+        cleanup_message = cleanup_result[1]
 
         self.tbLog.setText("")
 
-        for i in range(len(prep_messages)):
-          self.tbLog.append(prep_messages[i])
+        for i in range(len(cleanup_message)):
+          self.tbLog.append(cleanup_message[i])
 
-
-        #self.tbLog.setText(CleanupResult[4][0])
 
 
 class AT_TEX_TAB (QWidget):
