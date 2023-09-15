@@ -26,15 +26,11 @@ def Cleanup(TOLOWERCASE, TOEPOLY, COLLAPSESTACK):
     #First we check names and reneme if necessary
     name_check_result = []
     name_check_result = nameChecker(TOLOWERCASE)
-
-    if DebugPrint == True:
-        print("-- nameChecker --")
-        print("Was Renamed:", name_check_result[1])
-        print("Renamed Objects:", name_check_result[0])
-        
-        
+    
+    #add info to summary
     if name_check_result[1] == True:
-        cleanup_message.append("Renamed objects:")
+        renamedObjectsCount = (len(name_check_result[0]))
+        cleanup_message.append("\nRenamed objects (" + str(renamedObjectsCount) + "):")
         for i in range(len(name_check_result[0])):
             cleanup_message.append(name_check_result[0][i])
    
@@ -42,24 +38,22 @@ def Cleanup(TOLOWERCASE, TOEPOLY, COLLAPSESTACK):
     check_result = []
     check_result = checkSelection(TOEPOLY, COLLAPSESTACK)
 
-    if DebugPrint == True:
-        print("-- checkSelection --")
-        print ("sel_objects:", check_result[0])
-        print ("sel_editable_poly_objects:", check_result[1])
-        print ("sel_bones:", check_result[2])
-        print ("sel_editable_poly_nodes:", check_result[3])
-        print ("converted_objects:", check_result[4])
-
     sel_objects = check_result[0]
     sel_editable_poly_objects = check_result[1]
     sel_bones = check_result[2]
     sel_editable_poly_nodes = check_result[3]
 
     if len(check_result[4]) > 0:
-        cleanup_message.append("\nObjects Converted To Poly:")
+        objectsConvertedToPoly = (len(check_result[4]))
+        cleanup_message.append("\nObjects Converted To Poly (" + str(objectsConvertedToPoly) + "):")
         for i in range(len(check_result[4])):
             cleanup_message.append(check_result[4][i])
 
+    if len(check_result[5]) > 0:
+        objectsCollapsed = (len(check_result[5]))
+        cleanup_message.append("\nCollapsed Objects (" + str(objectsCollapsed) + "):")
+        for i in range(len(check_result[5])):
+            cleanup_message.append(check_result[5][i])
 
     # stat selection
     SelectedObjects = len(sel_objects)
@@ -71,7 +65,8 @@ def Cleanup(TOLOWERCASE, TOEPOLY, COLLAPSESTACK):
     if len(sel_editable_poly_objects) > 0:
         check_data = prepareMesh(sel_editable_poly_objects)
 
-        cleanup_message.append("\nProceeded Objects List:")
+        editablePolyObjects = (len(sel_editable_poly_objects))
+        cleanup_message.append("\nProceeded Objects List (" + str(editablePolyObjects) + "):")
         for i in range(len(sel_editable_poly_objects)):
             cleanup_message.append(sel_editable_poly_objects[i])
 
@@ -79,7 +74,7 @@ def Cleanup(TOLOWERCASE, TOEPOLY, COLLAPSESTACK):
         for i in range(len(check_data[1])):
             cleanup_message.append(check_data[1][i])
     else:
-        cleanup_message.append("\nNo objects of type editable poly were selected. Geometry cleanup works only with editable poly objects.")
+        cleanup_message.append("\nCleanup was not done. Possible reasons:\nNo objects of type editable poly were selected. Geometry cleanup works only with editable poly objects.\nIs the stack of your objects collapsed?")
         check_data.append("null")
         check_data.append("null")
         
@@ -107,6 +102,7 @@ def checkSelection(ToPoly, CollapseStack):
     other_nodes = []
 
     converted_objects = []
+    collapsed_objects = []
 
     #selected obj
     SelObjCount = rt.selection.count
@@ -123,12 +119,16 @@ def checkSelection(ToPoly, CollapseStack):
             #all selected objects     
             all_sel_obj.append(ObjectName)
 
-            #If Collapse True IMPORTANT!
-            if CollapseStack==True:
-                rt.maxops.collapsenode((c), True)
+            #count modifiers in stack
+            modifiersCount = len(c.modifiers)
 
-            #Ic Convert to Poly is true IMPORTANT!
-            if ((ToPoly==True) and (str(rt.classOf(c)) != "Editable_Poly")):
+            #If Collapse True and obj has stack IMPORTANT!
+            if (CollapseStack == True and modifiersCount > 0):
+                rt.maxops.collapsenode((c), True)
+                collapsed_objects.append(ObjectName)
+
+            #Ic Convert to Poly is true and hasnt stack and no edit poly IMPORTANT!
+            if ((ToPoly == True) and (str(rt.classOf(c)) != "Editable_Poly") and modifiersCount == 0):
                 rt.convertToPoly (c)
                 converted_objects.append(ObjectName)
 
@@ -150,7 +150,16 @@ def checkSelection(ToPoly, CollapseStack):
                 for i in range(len(other_nodes)):
                     rt.deselect (other_nodes[i])   
 
-    return all_sel_obj, editable_poly_obj, bones_obj, editable_poly_nodes, converted_objects
+    if DebugPrint == True:
+        print("-- checkSelection --")
+        print ("sel_objects:", all_sel_obj)
+        print ("sel_editable_poly_objects:", editable_poly_obj)
+        print ("sel_bones:", bones_obj)
+        print ("sel_editable_poly_nodes:", editable_poly_nodes)
+        print ("converted_objects:", converted_objects)
+        print ("collapsed_objects:", collapsed_objects)
+
+    return all_sel_obj, editable_poly_obj, bones_obj, editable_poly_nodes, converted_objects, collapsed_objects
 
 # Function for check names
 def nameChecker(ToLowercase):
@@ -196,6 +205,12 @@ def nameChecker(ToLowercase):
         else:
             NewName = OldName
             Renamed = False
+
+        # print to log
+        if DebugPrint == True:
+            print("-- nameChecker --")
+            print("Was Renamed:", Renamed)
+            print("Renamed Objects:", renamed_objects)
             
     return renamed_objects, Renamed
 
