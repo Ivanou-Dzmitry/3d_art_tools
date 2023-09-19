@@ -18,10 +18,10 @@ sys.dont_write_bytecode = True
 #for debug print
 DebugPrint = True
 
-def Cleanup(TOLOWERCASE, TOEPOLY, COLLAPSESTACK):
+def cleanupGeometry(TOLOWERCASE, TOEPOLY, COLLAPSESTACK):
 
     cleanup_message = []
-    cleanup_message.append("CLEANUP SUMMARY")
+    cleanup_message.append("CLEANUP GEOMETRY SUMMARY")
 
     #First we check names and reneme if necessary
     name_check_result = []
@@ -63,7 +63,7 @@ def Cleanup(TOLOWERCASE, TOEPOLY, COLLAPSESTACK):
     # Run Prepare mesh
     check_data = []
     if len(sel_editable_poly_objects) > 0:
-        check_data = prepareMesh(sel_editable_poly_objects)
+        check_data = cleanupGeo(sel_editable_poly_objects)
 
         editablePolyObjects = (len(sel_editable_poly_objects))
         cleanup_message.append("\nProceeded Objects List (" + str(editablePolyObjects) + "):")
@@ -161,6 +161,121 @@ def checkSelection(ToPoly, CollapseStack):
 
     return all_sel_obj, editable_poly_obj, bones_obj, editable_poly_nodes, converted_objects, collapsed_objects
 
+
+def cleanupScene():
+ 
+    cleanup_message = []
+    cleanup_message.append("CLEANUP SCENE SUMMARY")      
+    cleanup_message.append("\nOperations Performed:") 
+
+    prep_scene_conclusion_data = []
+    assigned_materials = []
+
+    #0 unhide layers
+    try:
+        for i in range(0, rt.LayerManager.count):
+            rt.LayerManager.getLayer(i).on = True
+
+        rt.execute ("max unhide all")
+        prep_scene_conclusion_data.append(True)
+    except:
+        prep_scene_conclusion_data.append(False)
+
+    #1 unfreeze all
+    try:
+        rt.execute ("max unfreeze all")
+        prep_scene_conclusion_data.append(True)
+    except:
+        prep_scene_conclusion_data.append(False)    
+    
+    #2 redraw view
+    try:
+        rt.execute ("redrawViews()")
+        prep_scene_conclusion_data.append(True)
+    except:
+        prep_scene_conclusion_data.append(False)  
+
+    #3 Reset Material Editor Slots
+    try:
+        rt.execute ("macros.run \"Medit Tools\" \"clear_medit_slots\"")
+        prep_scene_conclusion_data.append(True)
+    except:
+        prep_scene_conclusion_data.append(False)
+
+    #Editable_Poly objects in scene
+    scene_objects = []
+
+    #get all scene ojects
+    SceneObjects = rt.objects
+
+    #get all Editable_Poly
+    for i in range(len(SceneObjects)):
+        ObjectClass = str(rt.classOf(SceneObjects[i]))
+	    
+        if ObjectClass == "Editable_Poly":
+            scene_objects.append(SceneObjects[i])
+
+    #for uniqe mat and objects
+    unique_materials = []
+    unique_material_obj = []
+    
+    #5 Unique materials
+    try:
+        for i in range(len(scene_objects)):
+            
+            #try to get mat
+            try:
+                CurrentMaterial = str(scene_objects[i].material)
+                MaterialName = scene_objects[i].material.name
+            except:
+                #no mat assigned
+                MaterialName = "None"
+
+            if MaterialName == "None" or CurrentMaterial == "None":            
+                scene_objects[i].material = rt.Standard()
+                scene_objects[i].material.name = scene_objects[i].name + "_mat"
+                assigned_materials.append(scene_objects[i].name) #add mats
+
+            if scene_objects[i].material.name not in unique_materials:                
+                unique_materials.append(scene_objects[i].material.name)
+                unique_material_obj.append(scene_objects[i])
+
+        prep_scene_conclusion_data.append(True)
+    except:
+        prep_scene_conclusion_data.append(False)
+  
+    #6 Upd mat slots
+    try:
+        for i in range(len(unique_material_obj)):
+            MaterialName = str(unique_material_obj[i].material)        
+            rt.meditMaterials[i] = unique_material_obj[i].material
+        prep_scene_conclusion_data.append(True)
+    except:
+        prep_scene_conclusion_data.append(False)
+
+    if prep_scene_conclusion_data[0] == True:
+        cleanup_message.append("1. All objects and layers are unhidden.")
+    if prep_scene_conclusion_data[1] == True:
+        cleanup_message.append("2. All objects are unfrozen.")
+    if prep_scene_conclusion_data[2] == True:
+        cleanup_message.append("3. Viewport redraw complete.")
+    if prep_scene_conclusion_data[3] == True:
+        cleanup_message.append("4. Reset Material Editor slots complete.")
+    if prep_scene_conclusion_data[4] == True:
+        cleanup_message.append("5. Unique materials collected")
+    if prep_scene_conclusion_data[5] == True:
+        cleanup_message.append("6. Material slots updated")
+
+    if DebugPrint == True:
+        print("prep_scene_conclusion_data", prep_scene_conclusion_data)
+        print("cleanup_message", cleanup_message)
+        print("assigned_materials", assigned_materials)
+
+    return prep_scene_conclusion_data, cleanup_message, assigned_materials
+ 
+ 
+    
+
 # Function for check names
 def nameChecker(ToLowercase):
     
@@ -236,7 +351,9 @@ def sceneName():
 
     return AbsolutePathToScene, Message
 
-def prepareMesh(sel_editable_poly_objects):
+
+# cleanup geo operation
+def cleanupGeo(sel_editable_poly_objects):
 
     prep_mesh_conclusion_data = []
     messages = []
@@ -410,19 +527,19 @@ def prepareMesh(sel_editable_poly_objects):
 
     #0
     if prep_mesh_conclusion_data[0] == True:
-        messages.append("1. All objects and Layers are Unhidden.")
+        messages.append("1. All objects and layers are unhidden.")
     #1
     if prep_mesh_conclusion_data[1] == True:
-        messages.append("2. All objects are Unfrozen.")
+        messages.append("2. All objects are unfrozen.")
     #2
     if prep_mesh_conclusion_data[2] == True:
-        messages.append("3. Material Slot Reseted."        )
+        messages.append("3. Material slot reseted."        )
     #3    
     if prep_mesh_conclusion_data[3] == True:
-        messages.append("4. All Faces are Unhidden.")
+        messages.append("4. All faces are unhidden.")
     #4    
     if prep_mesh_conclusion_data[4] == True:
-        messages.append("5. All Vertices are Unhidden.")
+        messages.append("5. All vertices are unhidden.")
     #5    
     if prep_mesh_conclusion_data[5] == True:
         messages.append("6. Reset XForm applied to all objects.")
@@ -437,3 +554,92 @@ def prepareMesh(sel_editable_poly_objects):
         messages.append("9. Materials was processed.")
 
     return prep_mesh_conclusion_data, messages
+
+def cleanupViewport():
+
+    cleanup_message = []
+    cleanup_message.append("CLEANUP VIEWPORT SUMMARY")      
+    cleanup_message.append("\nOperations Performed:") 
+
+    cleanup_data = []
+    cleanup_data = prepareViewport()
+
+    return cleanup_data, cleanup_message
+
+
+def prepareViewport():
+
+    prep_viewport_conclusion_data = []
+
+    #0
+    try:
+        rt.clearSelection()
+        prep_viewport_conclusion_data.append(True)
+    except:
+        prep_viewport_conclusion_data.append(False)
+
+    #1
+    try:
+        rt.execute ("IDisplayGamma.colorCorrectionMode = #none")
+        print ("1. Gamma and LUT is off...................OK")
+        prep_viewport_conclusion_data.append(True)
+    except:
+        prep_viewport_conclusion_data.append(False)
+
+    #2
+    try:
+        rt.execute ("viewport.setLayout #layout_4")
+        rt.execute ("viewport.ResetAllViews()")
+        print ("2. Standart Layout........................OK")
+        prep_viewport_conclusion_data.append(True)
+    except:
+        prep_viewport_conclusion_data.append(False)
+
+    #3
+    try:
+        rt.execute ("max vpt persp user")
+        print ("3. Set Perspective........................OK")
+        prep_viewport_conclusion_data.append(True)
+    except:
+        prep_viewport_conclusion_data.append(False)
+
+    #4
+    try:
+        rt.execute("max zoomext sel all")
+        print ("4. Zoom to Objects........................OK")
+        prep_viewport_conclusion_data.append(True)
+    except:
+        prep_viewport_conclusion_data.append(False)
+
+    #5        
+    try:
+        rt.execute ("viewport.setFOV 45.0")
+        print ("5. FOV 45 for camera......................OK")
+        prep_viewport_conclusion_data.append(True)
+    except:
+        prep_viewport_conclusion_data.append(False)
+
+    #6
+    try:
+        rt.execute ("redrawViews()")
+        print ("6. Viewport Redraw........................OK")
+        prep_viewport_conclusion_data.append(True)
+    except:
+        prep_viewport_conclusion_data.append(False)
+    #7
+    try:
+        rt.execute ("actionMan.executeAction 0 \"550\"")
+        print ("7. Shaded Mode is ON......................OK")
+        prep_viewport_conclusion_data.append(True)
+    except:
+        prep_viewport_conclusion_data.append(False)
+    
+    #8
+    try:
+        rt.execute ("viewport.setGridVisibility 4 false")
+        print ("8. Grid is OFF............................OK")
+        prep_viewport_conclusion_data.append(True)
+    except:
+        prep_viewport_conclusion_data.append(False)
+
+    return prep_viewport_conclusion_data

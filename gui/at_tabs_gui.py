@@ -159,6 +159,7 @@ class AT_GEN_TAB (QWidget):
 
         # SIGNALS GEN
         self.btnCleanup.clicked.connect(self.CleanupRun)
+
         #self.btnGetStat.clicked.connect(self.btnGetStatClicked)
         #self.btnShowDim.clicked.connect(self.btnShowDimClicked)
         #self.btnZeroSGSel.clicked.connect(self.btnZeroSGSelClicked)
@@ -168,7 +169,18 @@ class AT_GEN_TAB (QWidget):
         #self.cbConvertMat.clicked.connect(self.cbConvertMatClicked)
         
         # Combo boxes
-        #self.cboxCleanupType.activated.connect(self.cbCleanupTypeActivated)
+        self.cboxCleanupType.activated.connect(self.cbCleanupTypeActivated)
+    
+    def cbCleanupTypeActivated(self):
+      
+      CLEANUPTYPE = self.cboxCleanupType.currentIndex()
+
+      if CLEANUPTYPE == 2:
+          self.gboxCleanupOptions.setEnabled(False)
+      else:
+          self.gboxCleanupOptions.setEnabled(True)
+
+       
     
     def CleanupRun(self):
       
@@ -177,18 +189,28 @@ class AT_GEN_TAB (QWidget):
       COLLAPSESTACK = self.cbCollapseStack.isChecked()
       CLEANUPTYPE = self.cboxCleanupType.currentIndex()
 
-      if CLEANUPTYPE == 0:
-        cleanup_result = []
-        cleanup_result = atgenfunc.Cleanup(TOLOWERCASE, TOEPOLY, COLLAPSESTACK)
+      self.tbLog.setText("")
 
-        cleanup_message = []
+      cleanup_result = []
+      cleanup_message = []
+
+      #geo
+      if CLEANUPTYPE == 0:
+        cleanup_result = atgenfunc.cleanupGeometry(TOLOWERCASE, TOEPOLY, COLLAPSESTACK)
         cleanup_message = cleanup_result[1]
 
-        self.tbLog.setText("")
+      #scene
+      if CLEANUPTYPE == 1:
+        cleanup_result = atgenfunc.cleanupScene()
+        cleanup_message = cleanup_result[1]
 
-        for i in range(len(cleanup_message)):
-          self.tbLog.append(cleanup_message[i])
+      #viewport
+      if CLEANUPTYPE == 2:
+        cleanup_result = atgenfunc.cleanupViewport()
+        cleanup_message = cleanup_result[1]
 
+      for i in range(len(cleanup_message)):
+        self.tbLog.append(cleanup_message[i])
 
 
 class AT_TEX_TAB (QWidget):
